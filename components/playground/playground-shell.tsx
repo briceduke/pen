@@ -95,6 +95,7 @@ export function PlaygroundShell() {
   const [autoRun, setAutoRun] = useState(seed.autoRun ?? true)
   const [exampleId, setExampleId] = useState(seed.exampleId ?? DEFAULT_EXAMPLE_ID)
   const [srcdoc, setSrcdoc] = useState(() => buildPreviewSrcdoc(seed))
+  const [loadId, setLoadId] = useState(0)
   const [remountId, setRemountId] = useState(0)
   const [lastRun, setLastRun] = useState(seed)
   const [messages, setMessages] = useState<readonly ConsoleMessage[]>([])
@@ -119,6 +120,7 @@ export function PlaygroundShell() {
       setMessages([])
       setSrcdoc(buildPreviewSrcdoc(next))
       setLastRun(next)
+      setLoadId((current) => current + 1)
       if (options?.remount) {
         setRemountId((current) => current + 1)
       }
@@ -248,6 +250,7 @@ export function PlaygroundShell() {
     css,
     js,
     srcdoc,
+    loadId,
     remountId,
     messages,
     isEmpty: isPreviewSourceEmpty(document),

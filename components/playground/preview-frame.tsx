@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 
 import {
-  BLANK_PREVIEW_SRCDOC,
   completePreviewLoad,
-  createPreviewSlots,
+  createIdlePreviewSlots,
   findPreviewSlot,
+  previewSlotKey,
   queuePreviewSrcdoc,
+  visiblePreviewSlot,
   type PreviewSlotIndex,
+  type PreviewSlots,
 } from "@/lib/playground/preview-buffer"
 import {
   applyPreviewRuntimeToken,
@@ -24,6 +26,7 @@ import { cn } from "@/lib/utils"
 
 export interface PreviewFrameProps {
   readonly srcdoc: string
+  readonly loadId: number
   readonly remountId: number
   readonly onConsoleMessage: (input: {
     readonly level: ConsoleLevel
@@ -31,37 +34,48 @@ export interface PreviewFrameProps {
   }) => void
 }
 
+interface PreviewConsolePayload {
+  readonly level: ConsoleLevel
+  readonly args: readonly string[]
+}
+
+/**
+ * @param slots - Current double-buffer slots
+ * @returns Token whose iframe may emit console, ready, or scroll events
+ */
+function readAcceptedToken(slots: PreviewSlots): string | null {
+  const loading = findPreviewSlot(slots, "loading")
+  if (loading !== null) {
+    return slots[loading].token
+  }
+  const active = findPreviewSlot(slots, "active")
+  return active === null ? null : slots[active].token
+}
+
 function PreviewBuffer({
   srcdoc,
+  loadId,
   onConsoleMessage,
 }: Omit<PreviewFrameProps, "remountId">) {
-  const [slots, setSlots] = useState(() =>
-    createPreviewSlots(BLANK_PREVIEW_SRCDOC, "")
-  )
+  const [slots, setSlots] = useState(createIdlePreviewSlots)
   const slotsRef = useRef(slots)
   const framesRef = useRef<[HTMLIFrameElement | null, HTMLIFrameElement | null]>(
     [null, null]
   )
   const scrollRef = useRef<PreviewScrollPosition>({ x: 0, y: 0 })
+  const onConsoleMessageRef = useRef(onConsoleMessage)
 
-  useEffect(() => {
-    slotsRef.current = slots
-  }, [slots])
+  onConsoleMessageRef.current = onConsoleMessage
+  slotsRef.current = slots
 
-  useEffect(() => {
-    function acceptedToken(): string | null {
-      const current = slotsRef.current
-      const loading = findPreviewSlot(current, "loading")
-      if (loading !== null) {
-        return current[loading].token
-      }
-      const active = findPreviewSlot(current, "active")
-      return active === null ? null : current[active].token
+  useLayoutEffect(() => {
+    function publishConsole(input: PreviewConsolePayload): void {
+      onConsoleMessageRef.current(input)
     }
 
-    function onMessage(event: MessageEvent<unknown>) {
+    function onMessage(event: MessageEvent<unknown>): void {
       const current = slotsRef.current
-      const token = acceptedToken()
+      const token = readAcceptedToken(current)
 
       if (isPreviewScrollEvent(event.data)) {
         if (event.data.token === token) {
@@ -83,14 +97,13 @@ function PreviewBuffer({
           if (!isPreviewReadyLog(log)) {
             continue
           }
-          onConsoleMessage({
+          publishConsole({
             level: log.level,
             args: stringifyConsoleArgs(log.args),
           })
         }
 
-        const frame = framesRef.current[loading]
-        frame?.contentWindow?.postMessage(
+        framesRef.current[loading]?.contentWindow?.postMessage(
           buildRestoreScrollMessage(scrollRef.current),
           "*"
         )
@@ -112,13 +125,17 @@ function PreviewBuffer({
         return
       }
 
-      onConsoleMessage({
+      publishConsole({
         level: event.data.level,
         args: stringifyConsoleArgs(event.data.args),
       })
     }
 
     window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [])
+
+  useLayoutEffect(() => {
     const loadToken = crypto.randomUUID()
     setSlots((current) => {
       const next = queuePreviewSrcdoc(
@@ -129,29 +146,27 @@ function PreviewBuffer({
       slotsRef.current = next
       return next
     })
+  }, [loadId, srcdoc])
 
-    return () => window.removeEventListener("message", onMessage)
-  }, [onConsoleMessage, srcdoc])
-
-  const active = findPreviewSlot(slots, "active") ?? 0
+  const visible = visiblePreviewSlot(slots)
 
   return (
     <div className="relative h-full min-h-0 bg-background">
       {([0, 1] as const).map((index: PreviewSlotIndex) => {
-        const isActive = index === active
+        const isVisible = index === visible
         return (
           <iframe
-            key={index}
+            key={previewSlotKey(index, slots[index])}
             ref={(node) => {
               framesRef.current[index] = node
             }}
-            title={isActive ? "Live preview" : "Live preview (loading)"}
+            title={isVisible ? "Live preview" : "Live preview (loading)"}
             sandbox="allow-scripts"
             srcDoc={slots[index].srcdoc}
-            aria-hidden={!isActive}
+            aria-hidden={!isVisible}
             className={cn(
               "absolute inset-0 h-full w-full bg-background",
-              isActive ? "visible" : "invisible"
+              isVisible ? "z-10" : "z-0 opacity-0 pointer-events-none"
             )}
           />
         )
@@ -162,6 +177,7 @@ function PreviewBuffer({
 
 export function PreviewFrame({
   srcdoc,
+  loadId,
   remountId,
   onConsoleMessage,
 }: PreviewFrameProps) {
@@ -169,6 +185,7 @@ export function PreviewFrame({
     <PreviewBuffer
       key={remountId}
       srcdoc={srcdoc}
+      loadId={loadId}
       onConsoleMessage={onConsoleMessage}
     />
   )

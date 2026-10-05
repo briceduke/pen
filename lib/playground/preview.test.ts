@@ -25,6 +25,11 @@ describe("preview srcdoc", () => {
     expect(srcdoc).toContain("Preview ready")
   })
 
+  it("is byte-stable for the same document so reloads need a load token", () => {
+    const document = getDefaultDocument()
+    expect(buildPreviewSrcdoc(document)).toBe(buildPreviewSrcdoc(document))
+  })
+
   it("escapes closing script tags in user javascript", () => {
     const srcdoc = buildPreviewSrcdoc({
       v: 1,
