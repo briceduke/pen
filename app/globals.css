@@ -134,4 +134,9 @@
 
 .cm-editor .cm-scroller {
   font-family: var(--font-mono), ui-monospace, monospace;
+  overscroll-behavior: contain;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
 }

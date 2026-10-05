@@ -3,9 +3,13 @@ import { describe, expect, it } from "vitest"
 import { getDefaultDocument } from "@/lib/playground/examples"
 import {
   buildShareUrl,
+  classifyShareUrlLength,
   decodePlaygroundDocument,
   encodePlaygroundDocument,
+  formatShareCopiedMessage,
   readShareFromLocation,
+  SHARE_URL_HARD_LIMIT,
+  SHARE_URL_SOFT_LIMIT,
 } from "@/lib/playground/share"
 
 describe("playground share encoding", () => {
@@ -53,5 +57,13 @@ describe("playground share encoding", () => {
   it("builds a hash share URL", () => {
     const url = buildShareUrl("https://pen.example", "/", "abc")
     expect(url).toBe("https://pen.example/#d=abc")
+  })
+
+  it("classifies share URL length without changing encoding", () => {
+    expect(classifyShareUrlLength(120)).toBe("ok")
+    expect(classifyShareUrlLength(SHARE_URL_SOFT_LIMIT + 1)).toBe("long")
+    expect(classifyShareUrlLength(SHARE_URL_HARD_LIMIT + 1)).toBe("tooLong")
+    expect(formatShareCopiedMessage(120)).toBe("Share URL copied")
+    expect(formatShareCopiedMessage(SHARE_URL_HARD_LIMIT + 1)).toContain("may fail")
   })
 })

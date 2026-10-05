@@ -7,6 +7,7 @@ import {
   RefreshIcon,
   Share08Icon,
   SourceCodeIcon,
+  Tick02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -36,10 +38,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { STARTER_EXAMPLES } from "@/lib/playground/examples"
+import { modifierKeyLabel } from "@/lib/playground/keyboard"
 
 export interface PlaygroundToolbarProps {
   readonly exampleId: string
   readonly autoRun: boolean
+  readonly isStale: boolean
+  readonly isShareCopied: boolean
   readonly onSelectExample: (exampleId: string) => void
   readonly onToggleAutoRun: (autoRun: boolean) => void
   readonly onRunPreview: () => void
@@ -69,30 +74,33 @@ function ShortcutHint({
 export function PlaygroundToolbar({
   exampleId,
   autoRun,
+  isStale,
+  isShareCopied,
   onSelectExample,
   onToggleAutoRun,
   onRunPreview,
   onShareUrl,
   onRequestReset,
 }: PlaygroundToolbarProps) {
+  const modifier = modifierKeyLabel(
+    typeof navigator === "undefined" ? "" : navigator.userAgent
+  )
+  const runVariant = isStale && !autoRun ? "default" : "secondary"
+
   return (
     <header className="flex flex-wrap items-center gap-2 border-b bg-card px-3 py-2">
-      <div className="flex items-center gap-2 pr-2">
+      <div className="flex items-center gap-2 pr-1">
         <HugeiconsIcon icon={SourceCodeIcon} />
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">Pen</span>
-          <span className="hidden text-xs text-muted-foreground sm:block">
-            In-browser HTML / CSS / JS
-          </span>
-        </div>
+        <span className="text-sm font-medium">Pen</span>
       </div>
 
       <Select value={exampleId} onValueChange={onSelectExample}>
-        <SelectTrigger size="sm" aria-label="Starter example">
+        <SelectTrigger size="sm" className="min-w-36" aria-label="Starter example">
           <SelectValue placeholder="Example" />
         </SelectTrigger>
         <SelectContent align="start" position="popper">
           <SelectGroup>
+            <SelectLabel>Starters</SelectLabel>
             {STARTER_EXAMPLES.map((example) => (
               <SelectItem key={example.id} value={example.id}>
                 {example.name}
@@ -110,33 +118,52 @@ export function PlaygroundToolbar({
           size="sm"
           checked={autoRun}
           onCheckedChange={(checked) => onToggleAutoRun(checked === true)}
+          aria-label="Auto-run"
         />
-        <Label htmlFor="auto-run">Auto-run</Label>
+        <Label htmlFor="auto-run" className="hidden sm:inline">
+          Auto-run
+        </Label>
       </div>
 
       <div className="ml-auto flex flex-wrap items-center gap-1.5">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button type="button" variant="secondary" size="sm" onClick={onRunPreview}>
+            <Button
+              type="button"
+              variant={runVariant}
+              size="sm"
+              onClick={onRunPreview}
+            >
               <HugeiconsIcon icon={PlayIcon} data-icon="inline-start" />
               Run
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            Run preview <Kbd>⌘</Kbd>
+            Run preview <Kbd>{modifier}</Kbd>
             <Kbd>Enter</Kbd>
           </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button type="button" variant="outline" size="sm" onClick={onShareUrl}>
-              <HugeiconsIcon icon={Share08Icon} data-icon="inline-start" />
-              Share
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onShareUrl}
+              aria-label={isShareCopied ? "Share URL copied" : "Copy share URL"}
+            >
+              <HugeiconsIcon
+                icon={isShareCopied ? Tick02Icon : Share08Icon}
+                data-icon="inline-start"
+              />
+              <span className="hidden sm:inline">
+                {isShareCopied ? "Copied" : "Share"}
+              </span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            Copy share URL <Kbd>⌘</Kbd>
+            Copy share URL <Kbd>{modifier}</Kbd>
             <Kbd>S</Kbd>
           </TooltipContent>
         </Tooltip>
@@ -150,11 +177,11 @@ export function PlaygroundToolbar({
               onClick={onRequestReset}
             >
               <HugeiconsIcon icon={RefreshIcon} data-icon="inline-start" />
-              Reset
+              <span className="hidden sm:inline">Reset</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            Reset example <Kbd>⌘</Kbd>
+            Reset example <Kbd>{modifier}</Kbd>
             <Kbd>⇧</Kbd>
             <Kbd>R</Kbd>
           </TooltipContent>
@@ -162,7 +189,12 @@ export function PlaygroundToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Shortcuts">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Shortcuts"
+            >
               <HugeiconsIcon icon={KeyboardIcon} />
             </Button>
           </DropdownMenuTrigger>
@@ -170,13 +202,13 @@ export function PlaygroundToolbar({
             <DropdownMenuGroup>
               <DropdownMenuLabel>Keyboard</DropdownMenuLabel>
               <DropdownMenuItem disabled>
-                <ShortcutHint keys={["⌘", "Enter"]} label="Run" />
+                <ShortcutHint keys={[modifier, "Enter"]} label="Run" />
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
-                <ShortcutHint keys={["⌘", "S"]} label="Share URL" />
+                <ShortcutHint keys={[modifier, "S"]} label="Share URL" />
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
-                <ShortcutHint keys={["⌘", "⇧", "R"]} label="Reset" />
+                <ShortcutHint keys={[modifier, "⇧", "R"]} label="Reset" />
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

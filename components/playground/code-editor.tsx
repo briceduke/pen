@@ -4,10 +4,13 @@ import { html } from "@codemirror/lang-html"
 import { css } from "@codemirror/lang-css"
 import { javascript } from "@codemirror/lang-javascript"
 import type { Extension } from "@codemirror/state"
+import { EditorView, placeholder } from "@codemirror/view"
 import CodeMirror from "@uiw/react-codemirror"
 import { useTheme } from "next-themes"
+import { useMemo } from "react"
 
 import { createEditorTheme } from "@/components/playground/editor-theme"
+import { editorPlaceholder } from "@/lib/playground/editor"
 import type { EditorLanguage } from "@/lib/playground/types"
 
 export interface CodeEditorProps {
@@ -35,10 +38,15 @@ export function CodeEditor({
 }: CodeEditorProps) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme !== "light"
-  const extensions: Extension[] = [
-    getLanguageExtension(language),
-    createEditorTheme(isDark),
-  ]
+
+  const extensions = useMemo((): Extension[] => {
+    return [
+      getLanguageExtension(language),
+      EditorView.lineWrapping,
+      placeholder(editorPlaceholder(language)),
+      createEditorTheme(isDark),
+    ]
+  }, [isDark, language])
 
   return (
     <CodeMirror
@@ -50,7 +58,7 @@ export function CodeEditor({
       basicSetup={{
         foldGutter: false,
         highlightActiveLine: true,
-        highlightActiveLineGutter: false,
+        highlightActiveLineGutter: true,
       }}
       aria-label={ariaLabel}
       className="h-full overflow-hidden"
