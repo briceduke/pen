@@ -7,7 +7,7 @@ import type { Extension } from "@codemirror/state"
 import { EditorView, placeholder } from "@codemirror/view"
 import CodeMirror from "@uiw/react-codemirror"
 import { useTheme } from "next-themes"
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 
 import { createEditorTheme } from "@/components/playground/editor-theme"
 import { editorPlaceholder } from "@/lib/playground/editor"
@@ -20,17 +20,27 @@ export interface CodeEditorProps {
   readonly ariaLabel: string
 }
 
-function getLanguageExtension(language: EditorLanguage): Extension {
-  if (language === "html") {
-    return html()
-  }
-  if (language === "css") {
-    return css()
-  }
-  return javascript()
+const LANGUAGE_EXTENSIONS: Record<EditorLanguage, Extension> = {
+  html: html(),
+  css: css(),
+  javascript: javascript(),
 }
 
-export function CodeEditor({
+const LINE_WRAPPING: Extension = EditorView.lineWrapping
+
+const EDITOR_BASIC_SETUP = {
+  foldGutter: false,
+  highlightActiveLine: true,
+  highlightActiveLineGutter: true,
+  autocompletion: false,
+} as const
+
+const EDITOR_THEMES: Record<"dark" | "light", Extension> = {
+  dark: createEditorTheme(true),
+  light: createEditorTheme(false),
+}
+
+export const CodeEditor = memo(function CodeEditor({
   language,
   value,
   onChangeValue,
@@ -41,10 +51,10 @@ export function CodeEditor({
 
   const extensions = useMemo((): Extension[] => {
     return [
-      getLanguageExtension(language),
-      EditorView.lineWrapping,
+      LANGUAGE_EXTENSIONS[language],
+      LINE_WRAPPING,
       placeholder(editorPlaceholder(language)),
-      createEditorTheme(isDark),
+      EDITOR_THEMES[isDark ? "dark" : "light"],
     ]
   }, [isDark, language])
 
@@ -55,13 +65,9 @@ export function CodeEditor({
       theme="none"
       extensions={extensions}
       onChange={onChangeValue}
-      basicSetup={{
-        foldGutter: false,
-        highlightActiveLine: true,
-        highlightActiveLineGutter: true,
-      }}
+      basicSetup={EDITOR_BASIC_SETUP}
       aria-label={ariaLabel}
       className="h-full overflow-hidden"
     />
   )
-}
+})

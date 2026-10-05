@@ -13,6 +13,27 @@ export interface PreviewSlot {
 
 export type PreviewSlots = readonly [PreviewSlot, PreviewSlot]
 
+const IDLE_SLOT: PreviewSlot = {
+  srcdoc: BLANK_PREVIEW_SRCDOC,
+  role: "idle",
+  token: "",
+}
+
+/**
+ * @param srcdoc - HTML document to inspect
+ * @returns Whether the document is the empty double-buffer placeholder
+ */
+export function isBlankPreviewSrcdoc(srcdoc: string): boolean {
+  return srcdoc === BLANK_PREVIEW_SRCDOC
+}
+
+/**
+ * @returns Double-buffer slots with no visible document yet
+ */
+export function createIdlePreviewSlots(): PreviewSlots {
+  return [IDLE_SLOT, IDLE_SLOT]
+}
+
 /**
  * @param srcdoc - Initial tagged srcdoc for the visible iframe
  * @param token - Runtime token baked into that srcdoc
@@ -24,7 +45,7 @@ export function createPreviewSlots(
 ): PreviewSlots {
   return [
     { srcdoc, role: "active", token },
-    { srcdoc: BLANK_PREVIEW_SRCDOC, role: "idle", token: "" },
+    IDLE_SLOT,
   ]
 }
 
@@ -54,6 +75,48 @@ export function findPreviewSlot(
   return null
 }
 
+/**
+ * Slot React should paint. Never prefers a blank "active" placeholder over a
+ * loading document — that is the cold-start white screen.
+ *
+ * @param slots - Current double-buffer slots
+ * @returns Index of the iframe that should be visible
+ */
+export function visiblePreviewSlot(slots: PreviewSlots): PreviewSlotIndex {
+  const active = findPreviewSlot(slots, "active")
+  if (active !== null && !isBlankPreviewSrcdoc(slots[active].srcdoc)) {
+    return active
+  }
+
+  const loading = findPreviewSlot(slots, "loading")
+  if (loading !== null && !isBlankPreviewSrcdoc(slots[loading].srcdoc)) {
+    return loading
+  }
+
+  if (active !== null) {
+    return active
+  }
+  if (loading !== null) {
+    return loading
+  }
+  return 0
+}
+
+/**
+ * Stable iframe identity for a slot. Token changes remount the iframe so
+ * `srcDoc` is applied on a fresh element (in-place `srcDoc` updates are flaky).
+ *
+ * @param index - Slot index
+ * @param slot - Slot to key
+ * @returns React key for that iframe
+ */
+export function previewSlotKey(
+  index: PreviewSlotIndex,
+  slot: PreviewSlot
+): string {
+  return `preview-${index}-${slot.token || "idle"}`
+}
+
 function writeSlot(
   slots: PreviewSlots,
   index: PreviewSlotIndex,
@@ -62,8 +125,21 @@ function writeSlot(
   return index === 0 ? [slot, slots[1]] : [slots[0], slot]
 }
 
+function queueTargetSlot(slots: PreviewSlots): PreviewSlotIndex {
+  const active = findPreviewSlot(slots, "active")
+  if (active === null) {
+    return 0
+  }
+  if (isBlankPreviewSrcdoc(slots[active].srcdoc)) {
+    return active
+  }
+  return otherPreviewSlot(active)
+}
+
 /**
- * Queues srcdoc into the hidden iframe so the visible document stays put.
+ * Queues srcdoc into a buffer iframe. The first real document occupies a blank
+ * visible slot; later documents load in the hidden slot so the painted iframe
+ * stays put until ready.
  *
  * @param slots - Current double-buffer slots
  * @param srcdoc - Next tagged srcdoc
@@ -80,9 +156,11 @@ export function queuePreviewSrcdoc(
     return writeSlot(slots, loading, { srcdoc, role: "loading", token })
   }
 
-  const active = findPreviewSlot(slots, "active") ?? 0
-  const target = otherPreviewSlot(active)
-  return writeSlot(slots, target, { srcdoc, role: "loading", token })
+  return writeSlot(slots, queueTargetSlot(slots), {
+    srcdoc,
+    role: "loading",
+    token,
+  })
 }
 
 /**
@@ -100,10 +178,7 @@ export function completePreviewLoad(
     return null
   }
 
-  const blank: PreviewSlots = [
-    { srcdoc: BLANK_PREVIEW_SRCDOC, role: "idle", token: "" },
-    { srcdoc: BLANK_PREVIEW_SRCDOC, role: "idle", token: "" },
-  ]
+  const blank: PreviewSlots = [IDLE_SLOT, IDLE_SLOT]
 
   return writeSlot(blank, loaded, {
     srcdoc: slots[loaded].srcdoc,

@@ -23,6 +23,7 @@ export interface MobileWorkspaceProps {
   readonly css: string
   readonly js: string
   readonly srcdoc: string
+  readonly loadId: number
   readonly remountId: number
   readonly messages: readonly ConsoleMessage[]
   readonly isEmpty: boolean
@@ -43,6 +44,7 @@ export function MobileWorkspace({
   css,
   js,
   srcdoc,
+  loadId,
   remountId,
   messages,
   isEmpty,
@@ -101,6 +103,7 @@ export function MobileWorkspace({
       >
         <PreviewStage
           srcdoc={srcdoc}
+          loadId={loadId}
           remountId={remountId}
           isEmpty={isEmpty}
           isStale={isStale}

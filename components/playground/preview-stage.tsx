@@ -17,6 +17,7 @@ import type { ConsoleLevel } from "@/lib/playground/types"
 
 export interface PreviewStageProps {
   readonly srcdoc: string
+  readonly loadId: number
   readonly remountId: number
   readonly isEmpty: boolean
   readonly isStale: boolean
@@ -29,6 +30,7 @@ export interface PreviewStageProps {
 
 export function PreviewStage({
   srcdoc,
+  loadId,
   remountId,
   isEmpty,
   isStale,
@@ -51,6 +53,7 @@ export function PreviewStage({
       <div className="relative h-full min-h-0 bg-card">
         <PreviewFrame
           srcdoc={srcdoc}
+          loadId={loadId}
           remountId={remountId}
           onConsoleMessage={onConsoleMessage}
         />

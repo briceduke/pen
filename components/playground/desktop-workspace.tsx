@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import dynamic from "next/dynamic"
 
 import { ConsolePanel } from "@/components/playground/console-panel"
@@ -28,6 +29,7 @@ export interface PlaygroundWorkspaceProps {
   readonly css: string
   readonly js: string
   readonly srcdoc: string
+  readonly loadId: number
   readonly remountId: number
   readonly messages: readonly ConsoleMessage[]
   readonly isEmpty: boolean
@@ -43,7 +45,7 @@ export interface PlaygroundWorkspaceProps {
   readonly onClearMessages: () => void
 }
 
-function EditorColumn({
+const EditorColumn = memo(function EditorColumn({
   language,
   value,
   onChangeValue,
@@ -64,13 +66,14 @@ function EditorColumn({
       />
     </WorkspacePane>
   )
-}
+})
 
 export function DesktopWorkspace({
   html,
   css,
   js,
   srcdoc,
+  loadId,
   remountId,
   messages,
   isEmpty,
@@ -121,6 +124,7 @@ export function DesktopWorkspace({
           <ResizablePanel id="preview" defaultSize="78" minSize="28">
             <PreviewStage
               srcdoc={srcdoc}
+              loadId={loadId}
               remountId={remountId}
               isEmpty={isEmpty}
               isStale={isStale}
