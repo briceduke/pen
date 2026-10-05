@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic"
 
 import { ConsolePanel } from "@/components/playground/console-panel"
-import { PreviewFrame } from "@/components/playground/preview-frame"
+import { PreviewStage } from "@/components/playground/preview-stage"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ConsoleLevel, ConsoleMessage } from "@/lib/playground/types"
@@ -22,8 +23,11 @@ export interface MobileWorkspaceProps {
   readonly css: string
   readonly js: string
   readonly srcdoc: string
-  readonly runId: number
+  readonly remountId: number
   readonly messages: readonly ConsoleMessage[]
+  readonly isEmpty: boolean
+  readonly isStale: boolean
+  readonly errorCount: number
   readonly onHtmlChange: (value: string) => void
   readonly onCssChange: (value: string) => void
   readonly onJsChange: (value: string) => void
@@ -39,8 +43,11 @@ export function MobileWorkspace({
   css,
   js,
   srcdoc,
-  runId,
+  remountId,
   messages,
+  isEmpty,
+  isStale,
+  errorCount,
   onHtmlChange,
   onCssChange,
   onJsChange,
@@ -55,7 +62,12 @@ export function MobileWorkspace({
           <TabsTrigger value="css">CSS</TabsTrigger>
           <TabsTrigger value="js">JS</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="console">Console</TabsTrigger>
+          <TabsTrigger value="console">
+            Console
+            {errorCount > 0 ? (
+              <Badge variant="destructive">{errorCount}</Badge>
+            ) : null}
+          </TabsTrigger>
         </TabsList>
       </div>
       <TabsContent value="html" className="min-h-0 overflow-hidden">
@@ -82,14 +94,25 @@ export function MobileWorkspace({
           ariaLabel="JavaScript editor"
         />
       </TabsContent>
-      <TabsContent value="preview" className="min-h-0 overflow-hidden">
-        <PreviewFrame
+      <TabsContent
+        value="preview"
+        forceMount
+        className="min-h-0 overflow-hidden data-[state=inactive]:hidden"
+      >
+        <PreviewStage
           srcdoc={srcdoc}
-          runId={runId}
+          remountId={remountId}
+          isEmpty={isEmpty}
+          isStale={isStale}
+          errorCount={errorCount}
           onConsoleMessage={onConsoleMessage}
         />
       </TabsContent>
-      <TabsContent value="console" className="min-h-0 overflow-hidden">
+      <TabsContent
+        value="console"
+        forceMount
+        className="min-h-0 overflow-hidden data-[state=inactive]:hidden"
+      >
         <ConsolePanel messages={messages} onClearMessages={onClearMessages} />
       </TabsContent>
     </Tabs>

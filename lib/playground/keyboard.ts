@@ -24,3 +24,19 @@ export function matchPlaygroundShortcut(event: KeyboardEvent): ShortcutMatch {
     reset: mod && event.shiftKey && key === "r" && !event.altKey,
   }
 }
+
+/**
+ * @param userAgent - Navigator user agent
+ * @returns Whether the UA looks like Apple desktop or iOS
+ */
+export function isApplePlatform(userAgent: string): boolean {
+  return /Mac|iPhone|iPad|iPod/i.test(userAgent)
+}
+
+/**
+ * @param userAgent - Navigator user agent
+ * @returns Modifier glyph used in shortcut hints
+ */
+export function modifierKeyLabel(userAgent: string): "⌘" | "Ctrl" {
+  return isApplePlatform(userAgent) ? "⌘" : "Ctrl"
+}

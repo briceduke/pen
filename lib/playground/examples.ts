@@ -21,46 +21,53 @@ body {
   place-items: center;
   font-family: ui-sans-serif, system-ui, sans-serif;
   background:
-    radial-gradient(1200px 500px at 20% -10%, #3b3358, transparent),
-    #111015;
-  color: #f6f3ff;
+    radial-gradient(80rem 28rem at 12% -20%, rgb(255 255 255 / 0.08), transparent),
+    #111111;
+  color: #f4f4f5;
 }
 
 .card {
   max-width: 28rem;
-  padding: 2rem;
-  border-radius: 1.75rem;
-  background: rgb(255 255 255 / 0.06);
-  border: 1px solid rgb(255 255 255 / 0.12);
+  padding: 1.75rem 1.85rem 1.6rem;
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.1);
 }
 
 .eyebrow {
-  margin: 0 0 0.5rem;
-  letter-spacing: 0.16em;
+  margin: 0 0 0.45rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  font-size: 0.72rem;
-  color: #c9c2e0;
+  font-size: 0.68rem;
+  color: #a1a1aa;
 }
 
 h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.8rem;
+  margin: 0 0 0.7rem;
+  font-size: 1.7rem;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 p {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.2rem;
   line-height: 1.55;
-  color: #d8d3ea;
+  color: #d4d4d8;
 }
 
 button {
   border: 0;
   border-radius: 999px;
-  padding: 0.65rem 1.15rem;
-  background: #ece7fb;
-  color: #17141f;
+  padding: 0.6rem 1.05rem;
+  background: #fafafa;
+  color: #18181b;
   font-weight: 600;
   cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 3px;
 }
 `,
   js: `const button = document.querySelector("#ping")
@@ -86,44 +93,50 @@ const animationDocument: PlaygroundDocument = {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: #0b0b10;
+  background: #0a0a0a;
 }
 
 .stage {
   position: relative;
-  width: 10rem;
-  height: 10rem;
+  width: 11rem;
+  height: 11rem;
 }
 
 .planet {
   position: absolute;
-  inset: 3rem;
+  inset: 3.4rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #f4e8ff, #7c5cbf);
+  background: radial-gradient(circle at 32% 30%, #f4f4f5, #52525b);
 }
 
 .orbit {
   position: absolute;
   inset: 0;
-  border: 1px dashed rgb(255 255 255 / 0.2);
+  border: 1px dashed rgb(255 255 255 / 0.18);
   border-radius: 999px;
-  animation: spin 4s linear infinite;
+  animation: spin 5s linear infinite;
 }
 
 .moon {
   position: absolute;
-  top: -0.4rem;
+  top: -0.35rem;
   left: 50%;
-  width: 0.8rem;
-  height: 0.8rem;
-  margin-left: -0.4rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-left: -0.35rem;
   border-radius: 999px;
-  background: #efeafc;
+  background: #fafafa;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit {
+    animation: none;
   }
 }
 `,
@@ -135,11 +148,12 @@ const counterDocument: PlaygroundDocument = {
   v: 1,
   exampleId: "counter",
   html: `<section>
+  <p class="eyebrow">State</p>
   <h1>Counter</h1>
   <p id="value">0</p>
   <div class="row">
-    <button id="dec" type="button">−</button>
-    <button id="inc" type="button">+</button>
+    <button id="dec" type="button" aria-label="Decrement">−</button>
+    <button id="inc" type="button" aria-label="Increment">+</button>
   </div>
 </section>
 `,
@@ -149,35 +163,56 @@ const counterDocument: PlaygroundDocument = {
   display: grid;
   place-items: center;
   font-family: ui-sans-serif, system-ui, sans-serif;
-  background: #121118;
-  color: #f4f1fb;
+  background: #111111;
+  color: #fafafa;
 }
 
 section {
   text-align: center;
 }
 
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  color: #a1a1aa;
+}
+
+h1 {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #d4d4d8;
+}
+
 #value {
-  font-size: 4rem;
-  margin: 0.25rem 0 1rem;
+  font-size: 4.25rem;
+  margin: 0.15rem 0 1rem;
+  letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
 }
 
 .row {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.65rem;
   justify-content: center;
 }
 
 button {
-  width: 3rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 0;
   border-radius: 999px;
-  background: #ece7fb;
-  color: #16131c;
-  font-size: 1.4rem;
+  background: #fafafa;
+  color: #18181b;
+  font-size: 1.25rem;
   cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 3px;
 }
 `,
   js: `let count = 0
@@ -206,8 +241,9 @@ const errorDocument: PlaygroundDocument = {
   v: 1,
   exampleId: "errors",
   html: `<main>
-  <h1>Console errors</h1>
-  <p>This example logs, warns, then throws so you can see the console panel.</p>
+  <p class="eyebrow">Console</p>
+  <h1>Errors and warnings</h1>
+  <p>This example logs, warns, then throws so you can filter the console panel.</p>
   <button id="boom" type="button">Throw</button>
 </main>
 `,
@@ -217,22 +253,46 @@ const errorDocument: PlaygroundDocument = {
   display: grid;
   place-items: center;
   font-family: ui-sans-serif, system-ui, sans-serif;
-  background: #140f14;
-  color: #f7f1f1;
+  background: #111111;
+  color: #fafafa;
 }
 
 main {
   max-width: 24rem;
 }
 
+.eyebrow {
+  margin: 0 0 0.4rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  color: #a1a1aa;
+}
+
+h1 {
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0 0 1.1rem;
+  line-height: 1.5;
+  color: #d4d4d8;
+}
+
 button {
   border: 0;
   border-radius: 999px;
-  padding: 0.65rem 1.15rem;
-  background: #f3d6d6;
-  color: #3a1414;
+  padding: 0.6rem 1.05rem;
+  background: #fafafa;
+  color: #18181b;
   font-weight: 600;
   cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 3px;
 }
 `,
   js: `console.info("All good so far")
@@ -245,6 +305,14 @@ document.querySelector("#boom")?.addEventListener("click", () => {
 `,
 }
 
+const blankDocument: PlaygroundDocument = {
+  v: 1,
+  exampleId: "blank",
+  html: "",
+  css: "",
+  js: "",
+}
+
 export const STARTER_EXAMPLES: readonly StarterExample[] = [
   {
     id: "hello",
@@ -255,7 +323,7 @@ export const STARTER_EXAMPLES: readonly StarterExample[] = [
   {
     id: "orbit",
     name: "CSS orbit",
-    description: "Pure CSS animation",
+    description: "Pure CSS motion, respects reduced motion",
     document: animationDocument,
   },
   {
@@ -269,6 +337,12 @@ export const STARTER_EXAMPLES: readonly StarterExample[] = [
     name: "Console errors",
     description: "Logs, warnings, and a thrown error",
     document: errorDocument,
+  },
+  {
+    id: "blank",
+    name: "Blank",
+    description: "Empty editors for a fresh pen",
+    document: blankDocument,
   },
 ] as const
 

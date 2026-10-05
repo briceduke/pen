@@ -1,7 +1,14 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "lz-string"
 import { z } from "zod"
 
-import type { PlaygroundDocument, ShareLocation } from "@/lib/playground/types"
+import type {
+  PlaygroundDocument,
+  ShareLocation,
+  ShareUrlHealth,
+} from "@/lib/playground/types"
+
+export const SHARE_URL_SOFT_LIMIT = 2048
+export const SHARE_URL_HARD_LIMIT = 8192
 
 const SHARE_PARAM = "d" as const
 
@@ -108,4 +115,33 @@ export function replaceShareHash(encoded: string): void {
   url.searchParams.delete(SHARE_PARAM)
   url.hash = `${SHARE_PARAM}=${encoded}`
   window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`)
+}
+
+/**
+ * @param characterCount - Full share URL length
+ * @returns Health bucket for copy feedback
+ */
+export function classifyShareUrlLength(characterCount: number): ShareUrlHealth {
+  if (characterCount > SHARE_URL_HARD_LIMIT) {
+    return "tooLong"
+  }
+  if (characterCount > SHARE_URL_SOFT_LIMIT) {
+    return "long"
+  }
+  return "ok"
+}
+
+/**
+ * @param characterCount - Full share URL length
+ * @returns Toast copy after a successful clipboard write
+ */
+export function formatShareCopiedMessage(characterCount: number): string {
+  const health = classifyShareUrlLength(characterCount)
+  if (health === "tooLong") {
+    return `Copied · ${characterCount.toLocaleString()} chars. This URL may fail in some browsers.`
+  }
+  if (health === "long") {
+    return `Copied · ${characterCount.toLocaleString()} chars. Some apps truncate long links.`
+  }
+  return "Share URL copied"
 }

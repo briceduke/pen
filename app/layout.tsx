@@ -42,7 +42,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="dark" enableSystem={false}>
           <TooltipProvider>
             <Suspense fallback={null}>{children}</Suspense>
-            <Toaster />
+            <Toaster position="top-center" />
           </TooltipProvider>
         </ThemeProvider>
       </body>

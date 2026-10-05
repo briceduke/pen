@@ -21,11 +21,15 @@ import {
   findStarterExample,
   getDefaultDocument,
 } from "@/lib/playground/examples"
+import { countConsoleByLevel } from "@/lib/playground/console-filter"
+import { isPlaygroundStale, isPreviewSourceEmpty } from "@/lib/playground/document-state"
 import { matchPlaygroundShortcut } from "@/lib/playground/keyboard"
 import { buildPreviewSrcdoc } from "@/lib/playground/preview"
 import {
   buildShareUrl,
+  classifyShareUrlLength,
   encodePlaygroundDocument,
+  formatShareCopiedMessage,
   readShareFromLocation,
   replaceShareHash,
 } from "@/lib/playground/share"
@@ -91,12 +95,15 @@ export function PlaygroundShell() {
   const [autoRun, setAutoRun] = useState(seed.autoRun ?? true)
   const [exampleId, setExampleId] = useState(seed.exampleId ?? DEFAULT_EXAMPLE_ID)
   const [srcdoc, setSrcdoc] = useState(() => buildPreviewSrcdoc(seed))
-  const [runId, setRunId] = useState(0)
+  const [remountId, setRemountId] = useState(0)
+  const [lastRun, setLastRun] = useState(seed)
   const [messages, setMessages] = useState<readonly ConsoleMessage[]>([])
   const [isDesktop, setIsDesktop] = useState(readIsDesktop)
   const [isResetOpen, setIsResetOpen] = useState(false)
+  const [isShareCopied, setIsShareCopied] = useState(false)
   const runTimer = useRef<number | undefined>(undefined)
   const hashTimer = useRef<number | undefined>(undefined)
+  const copiedTimer = useRef<number | undefined>(undefined)
   const skipFirstAutoRun = useRef(true)
 
   const applyDocument = useCallback((next: PlaygroundDocument) => {
@@ -107,11 +114,17 @@ export function PlaygroundShell() {
     setExampleId(next.exampleId ?? DEFAULT_EXAMPLE_ID)
   }, [])
 
-  const runPreview = useCallback((next: PlaygroundDocument) => {
-    setMessages([])
-    setSrcdoc(buildPreviewSrcdoc(next))
-    setRunId((current) => current + 1)
-  }, [])
+  const runPreview = useCallback(
+    (next: PlaygroundDocument, options?: { readonly remount?: boolean }) => {
+      setMessages([])
+      setSrcdoc(buildPreviewSrcdoc(next))
+      setLastRun(next)
+      if (options?.remount) {
+        setRemountId((current) => current + 1)
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     const media = window.matchMedia(DESKTOP_QUERY)
@@ -178,7 +191,17 @@ export function PlaygroundShell() {
       toast.error("Could not copy the share URL")
       return
     }
-    toast.success("Share URL copied")
+    const message = formatShareCopiedMessage(url.length)
+    if (classifyShareUrlLength(url.length) === "tooLong") {
+      toast.warning(message)
+    } else {
+      toast.success(message)
+    }
+    setIsShareCopied(true)
+    window.clearTimeout(copiedTimer.current)
+    copiedTimer.current = window.setTimeout(() => {
+      setIsShareCopied(false)
+    }, 2000)
   }, [document])
 
   const onSelectExample = useCallback(
@@ -193,7 +216,7 @@ export function PlaygroundShell() {
   const onConfirmReset = useCallback(() => {
     const example = findStarterExample(exampleId)
     applyDocument({ ...example.document, autoRun })
-    runPreview({ ...example.document, autoRun })
+    runPreview({ ...example.document, autoRun }, { remount: true })
     setIsResetOpen(false)
   }, [applyDocument, autoRun, exampleId, runPreview])
 
@@ -225,8 +248,11 @@ export function PlaygroundShell() {
     css,
     js,
     srcdoc,
-    runId,
+    remountId,
     messages,
+    isEmpty: isPreviewSourceEmpty(document),
+    isStale: isPlaygroundStale(document, lastRun),
+    errorCount: countConsoleByLevel(messages).error,
     onHtmlChange: setHtml,
     onCssChange: setCss,
     onJsChange: setJs,
@@ -236,9 +262,18 @@ export function PlaygroundShell() {
 
   return (
     <div className="flex h-svh min-h-0 flex-col bg-background">
+      <a
+        href="#pen-workspace"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-4xl focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to workspace
+      </a>
+      <h1 className="sr-only">Pen playground</h1>
       <PlaygroundToolbar
         exampleId={exampleId}
         autoRun={autoRun}
+        isStale={isPlaygroundStale(document, lastRun)}
+        isShareCopied={isShareCopied}
         onSelectExample={onSelectExample}
         onToggleAutoRun={setAutoRun}
         onRunPreview={() => runPreview(document)}
@@ -247,7 +282,7 @@ export function PlaygroundShell() {
         }}
         onRequestReset={() => setIsResetOpen(true)}
       />
-      <div className="min-h-0 flex-1">
+      <div id="pen-workspace" className="min-h-0 flex-1">
         {isDesktop ? (
           <DesktopWorkspace {...workspaceProps} />
         ) : (

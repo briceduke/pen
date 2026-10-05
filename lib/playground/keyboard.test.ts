@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { matchPlaygroundShortcut } from "@/lib/playground/keyboard"
+import {
+  matchPlaygroundShortcut,
+  modifierKeyLabel,
+} from "@/lib/playground/keyboard"
 
 function keyEvent(partial: Partial<KeyboardEvent>): KeyboardEvent {
   return {
@@ -32,5 +35,10 @@ describe("keyboard shortcuts", () => {
         keyEvent({ metaKey: true, shiftKey: true, key: "r" })
       ).reset
     ).toBe(true)
+  })
+
+  it("uses platform-aware modifier labels", () => {
+    expect(modifierKeyLabel("Mozilla/5.0 (Macintosh)")).toBe("⌘")
+    expect(modifierKeyLabel("Mozilla/5.0 (X11; Linux x86_64)")).toBe("Ctrl")
   })
 })
