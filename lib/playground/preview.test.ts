@@ -42,6 +42,7 @@ describe("console events", () => {
     expect(
       isPreviewConsoleEvent({
         source: "pen-console",
+        token: "t1",
         level: "log",
         args: ["hi"],
       })
@@ -50,6 +51,13 @@ describe("console events", () => {
 
   it("rejects unrelated messages", () => {
     expect(isPreviewConsoleEvent({ hello: true })).toBe(false)
+    expect(
+      isPreviewConsoleEvent({
+        source: "pen-console",
+        level: "log",
+        args: ["hi"],
+      })
+    ).toBe(false)
   })
 
   it("stringifies console arguments", () => {

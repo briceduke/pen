@@ -27,7 +27,7 @@ function buildConsoleBridge(): string {
     try { return JSON.stringify(value); } catch { return String(value); }
   }
   function send(level, args) {
-    parent.postMessage({ source: "${CONSOLE_SOURCE}", level, args: args.map(serialize) }, "*");
+    parent.postMessage({ source: "${CONSOLE_SOURCE}", token: "${PREVIEW_RUNTIME_TOKEN_PLACEHOLDER}", level, args: args.map(serialize) }, "*");
   }
   for (const level of levels) {
     const original = console[level].bind(console);
@@ -120,7 +120,12 @@ function isRecord(data: unknown): data is Record<string, unknown> {
  */
 export function isPreviewConsoleEvent(
   data: unknown
-): data is { source: typeof CONSOLE_SOURCE; level: ConsoleLevel; args: unknown[] } {
+): data is {
+  source: typeof CONSOLE_SOURCE
+  token: string
+  level: ConsoleLevel
+  args: unknown[]
+} {
   if (!isRecord(data)) {
     return false
   }
@@ -129,6 +134,7 @@ export function isPreviewConsoleEvent(
 
   return (
     data.source === CONSOLE_SOURCE &&
+    typeof data.token === "string" &&
     typeof data.level === "string" &&
     levels.includes(data.level as ConsoleLevel) &&
     Array.isArray(data.args)

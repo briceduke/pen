@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react"
 
 import {
+  BLANK_PREVIEW_SRCDOC,
   completePreviewLoad,
   createPreviewSlots,
   findPreviewSlot,
   queuePreviewSrcdoc,
   type PreviewSlotIndex,
-  type PreviewSlots,
 } from "@/lib/playground/preview-buffer"
 import {
   applyPreviewRuntimeToken,
@@ -30,55 +30,40 @@ export interface PreviewFrameProps {
   }) => void
 }
 
-function createTaggedSlots(srcdoc: string): PreviewSlots {
-  const token = crypto.randomUUID()
-  return createPreviewSlots(applyPreviewRuntimeToken(srcdoc, token), token)
-}
-
 function PreviewBuffer({
   srcdoc,
   onConsoleMessage,
 }: Omit<PreviewFrameProps, "remountId">) {
-  const [slots, setSlots] = useState(() => createTaggedSlots(srcdoc))
+  const [slots, setSlots] = useState(() =>
+    createPreviewSlots(BLANK_PREVIEW_SRCDOC, "")
+  )
   const slotsRef = useRef(slots)
   const framesRef = useRef<[HTMLIFrameElement | null, HTMLIFrameElement | null]>(
     [null, null]
   )
   const scrollRef = useRef<PreviewScrollPosition>({ x: 0, y: 0 })
-  const skipFirstSrcdoc = useRef(true)
 
   useEffect(() => {
     slotsRef.current = slots
   }, [slots])
 
   useEffect(() => {
-    if (skipFirstSrcdoc.current) {
-      skipFirstSrcdoc.current = false
-      return
+    function acceptedToken(): string | null {
+      const current = slotsRef.current
+      const loading = findPreviewSlot(current, "loading")
+      if (loading !== null) {
+        return current[loading].token
+      }
+      const active = findPreviewSlot(current, "active")
+      return active === null ? null : current[active].token
     }
 
-    const token = crypto.randomUUID()
-    setSlots((current) =>
-      queuePreviewSrcdoc(
-        current,
-        applyPreviewRuntimeToken(srcdoc, token),
-        token
-      )
-    )
-  }, [srcdoc])
-
-  useEffect(() => {
     function onMessage(event: MessageEvent<unknown>) {
       const current = slotsRef.current
-      const sourceWindow = event.source
-      const frameWindows: readonly (Window | null | undefined)[] = [
-        framesRef.current[0]?.contentWindow,
-        framesRef.current[1]?.contentWindow,
-      ]
+      const token = acceptedToken()
 
       if (isPreviewScrollEvent(event.data)) {
-        const active = findPreviewSlot(current, "active")
-        if (active !== null && sourceWindow === frameWindows[active]) {
+        if (event.data.token === token) {
           scrollRef.current = { x: event.data.x, y: event.data.y }
         }
         return
@@ -87,9 +72,6 @@ function PreviewBuffer({
       if (isPreviewReadyEvent(event.data)) {
         const loading = findPreviewSlot(current, "loading")
         if (loading === null) {
-          return
-        }
-        if (sourceWindow !== frameWindows[loading]) {
           return
         }
         if (event.data.token !== current[loading].token) {
@@ -101,18 +83,18 @@ function PreviewBuffer({
           buildRestoreScrollMessage(scrollRef.current),
           "*"
         )
-        setSlots((incoming) => completePreviewLoad(incoming, loading) ?? incoming)
+        setSlots((incoming) => {
+          const next = completePreviewLoad(incoming, loading) ?? incoming
+          slotsRef.current = next
+          return next
+        })
         return
       }
 
       if (!isPreviewConsoleEvent(event.data)) {
         return
       }
-
-      const loading = findPreviewSlot(current, "loading")
-      const accepted =
-        loading !== null ? frameWindows[loading] : frameWindows[findPreviewSlot(current, "active") ?? 0]
-      if (sourceWindow !== accepted) {
+      if (event.data.token !== token) {
         return
       }
 
@@ -123,8 +105,19 @@ function PreviewBuffer({
     }
 
     window.addEventListener("message", onMessage)
+    const loadToken = crypto.randomUUID()
+    setSlots((current) => {
+      const next = queuePreviewSrcdoc(
+        current,
+        applyPreviewRuntimeToken(srcdoc, loadToken),
+        loadToken
+      )
+      slotsRef.current = next
+      return next
+    })
+
     return () => window.removeEventListener("message", onMessage)
-  }, [onConsoleMessage])
+  }, [onConsoleMessage, srcdoc])
 
   const active = findPreviewSlot(slots, "active") ?? 0
 
