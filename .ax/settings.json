@@ -1,0 +1,20 @@
+{
+  "project": "pen",
+  "language": "TypeScript",
+  "stack": [
+    "nextjs",
+    "react",
+    "tailwindcss",
+    "shadcn-ui",
+    "radix-maia",
+    "codemirror"
+  ],
+  "packageManager": "npm",
+  "scripts": {
+    "dev": "npm run dev",
+    "build": "npm run build",
+    "test": "npm test",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck"
+  }
+}
