@@ -27,6 +27,7 @@ export interface PlaygroundWorkspaceProps {
   readonly css: string
   readonly js: string
   readonly srcdoc: string
+  readonly runId: number
   readonly messages: readonly ConsoleMessage[]
   readonly onHtmlChange: (value: string) => void
   readonly onCssChange: (value: string) => void
@@ -43,6 +44,7 @@ export function DesktopWorkspace({
   css,
   js,
   srcdoc,
+  runId,
   messages,
   onHtmlChange,
   onCssChange,
@@ -108,7 +110,11 @@ export function DesktopWorkspace({
             <div className="flex h-full min-h-0 flex-col">
               <PaneHeader title="Preview" />
               <div className="min-h-0 flex-1">
-                <PreviewFrame srcdoc={srcdoc} onConsoleMessage={onConsoleMessage} />
+                <PreviewFrame
+                  srcdoc={srcdoc}
+                  runId={runId}
+                  onConsoleMessage={onConsoleMessage}
+                />
               </div>
             </div>
           </ResizablePanel>

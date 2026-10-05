@@ -22,6 +22,7 @@ export interface MobileWorkspaceProps {
   readonly css: string
   readonly js: string
   readonly srcdoc: string
+  readonly runId: number
   readonly messages: readonly ConsoleMessage[]
   readonly onHtmlChange: (value: string) => void
   readonly onCssChange: (value: string) => void
@@ -38,6 +39,7 @@ export function MobileWorkspace({
   css,
   js,
   srcdoc,
+  runId,
   messages,
   onHtmlChange,
   onCssChange,
@@ -81,7 +83,11 @@ export function MobileWorkspace({
         />
       </TabsContent>
       <TabsContent value="preview" className="min-h-0 overflow-hidden">
-        <PreviewFrame srcdoc={srcdoc} onConsoleMessage={onConsoleMessage} />
+        <PreviewFrame
+          srcdoc={srcdoc}
+          runId={runId}
+          onConsoleMessage={onConsoleMessage}
+        />
       </TabsContent>
       <TabsContent value="console" className="min-h-0 overflow-hidden">
         <ConsolePanel messages={messages} onClearMessages={onClearMessages} />

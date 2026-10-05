@@ -10,13 +10,18 @@ import type { ConsoleLevel } from "@/lib/playground/types"
 
 export interface PreviewFrameProps {
   readonly srcdoc: string
+  readonly runId: number
   readonly onConsoleMessage: (input: {
     readonly level: ConsoleLevel
     readonly args: readonly string[]
   }) => void
 }
 
-export function PreviewFrame({ srcdoc, onConsoleMessage }: PreviewFrameProps) {
+export function PreviewFrame({
+  srcdoc,
+  runId,
+  onConsoleMessage,
+}: PreviewFrameProps) {
   const frameRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
@@ -40,6 +45,7 @@ export function PreviewFrame({ srcdoc, onConsoleMessage }: PreviewFrameProps) {
 
   return (
     <iframe
+      key={runId}
       ref={frameRef}
       title="Live preview"
       sandbox="allow-scripts"

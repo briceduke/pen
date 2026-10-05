@@ -91,6 +91,7 @@ export function PlaygroundShell() {
   const [autoRun, setAutoRun] = useState(seed.autoRun ?? true)
   const [exampleId, setExampleId] = useState(seed.exampleId ?? DEFAULT_EXAMPLE_ID)
   const [srcdoc, setSrcdoc] = useState(() => buildPreviewSrcdoc(seed))
+  const [runId, setRunId] = useState(0)
   const [messages, setMessages] = useState<readonly ConsoleMessage[]>([])
   const [isDesktop, setIsDesktop] = useState(readIsDesktop)
   const [isResetOpen, setIsResetOpen] = useState(false)
@@ -109,6 +110,7 @@ export function PlaygroundShell() {
   const runPreview = useCallback((next: PlaygroundDocument) => {
     setMessages([])
     setSrcdoc(buildPreviewSrcdoc(next))
+    setRunId((current) => current + 1)
   }, [])
 
   useEffect(() => {
@@ -223,6 +225,7 @@ export function PlaygroundShell() {
     css,
     js,
     srcdoc,
+    runId,
     messages,
     onHtmlChange: setHtml,
     onCssChange: setCss,
