@@ -15,6 +15,7 @@ import {
   buildRestoreScrollMessage,
   isPreviewConsoleEvent,
   isPreviewReadyEvent,
+  isPreviewReadyLog,
   isPreviewScrollEvent,
   stringifyConsoleArgs,
 } from "@/lib/playground/preview"
@@ -78,6 +79,16 @@ function PreviewBuffer({
           return
         }
 
+        for (const log of event.data.logs) {
+          if (!isPreviewReadyLog(log)) {
+            continue
+          }
+          onConsoleMessage({
+            level: log.level,
+            args: stringifyConsoleArgs(log.args),
+          })
+        }
+
         const frame = framesRef.current[loading]
         frame?.contentWindow?.postMessage(
           buildRestoreScrollMessage(scrollRef.current),
@@ -92,6 +103,9 @@ function PreviewBuffer({
       }
 
       if (!isPreviewConsoleEvent(event.data)) {
+        return
+      }
+      if (findPreviewSlot(current, "loading") !== null) {
         return
       }
       if (event.data.token !== token) {

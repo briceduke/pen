@@ -20,6 +20,7 @@ describe("preview srcdoc", () => {
     expect(srcdoc).toContain('id="ping"')
     expect(srcdoc).toContain("pen-console")
     expect(srcdoc).toContain("pen-preview")
+    expect(srcdoc).toContain("__penStartupLogs")
     expect(srcdoc).toContain(PREVIEW_RUNTIME_TOKEN_PLACEHOLDER)
     expect(srcdoc).toContain("Preview ready")
   })
@@ -79,6 +80,7 @@ describe("preview runtime handshake", () => {
         source: "pen-preview",
         type: "ready",
         token: "t1",
+        logs: [{ level: "info", args: ["Preview ready"] }],
       })
     ).toBe(true)
     expect(

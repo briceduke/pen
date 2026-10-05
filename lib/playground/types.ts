@@ -46,6 +46,12 @@ export interface PreviewReadyEvent {
   readonly source: "pen-preview"
   readonly type: "ready"
   readonly token: string
+  readonly logs: readonly PreviewReadyLog[]
+}
+
+export interface PreviewReadyLog {
+  readonly level: ConsoleLevel
+  readonly args: readonly unknown[]
 }
 
 export interface PreviewScrollEvent extends PreviewScrollPosition {

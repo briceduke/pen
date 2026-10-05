@@ -22,12 +22,17 @@ function buildConsoleBridge(): string {
   return `
 (() => {
   const levels = ["log", "info", "warn", "error"];
+  window.__penStartupLogs = [];
   function serialize(value) {
     if (typeof value === "string") return value;
     try { return JSON.stringify(value); } catch { return String(value); }
   }
   function send(level, args) {
-    parent.postMessage({ source: "${CONSOLE_SOURCE}", token: "${PREVIEW_RUNTIME_TOKEN_PLACEHOLDER}", level, args: args.map(serialize) }, "*");
+    const serialized = args.map(serialize);
+    if (Array.isArray(window.__penStartupLogs)) {
+      window.__penStartupLogs.push({ level: level, args: serialized });
+    }
+    parent.postMessage({ source: "${CONSOLE_SOURCE}", token: "${PREVIEW_RUNTIME_TOKEN_PLACEHOLDER}", level: level, args: serialized }, "*");
   }
   for (const level of levels) {
     const original = console[level].bind(console);
@@ -61,7 +66,13 @@ function buildPreviewRuntime(): string {
   }
   window.addEventListener("message", onHostMessage);
   window.addEventListener("scroll", reportScroll, { passive: true });
-  parent.postMessage({ source: "${PREVIEW_SOURCE}", type: "ready", token: token }, "*");
+  parent.postMessage({
+    source: "${PREVIEW_SOURCE}",
+    type: "ready",
+    token: token,
+    logs: Array.isArray(window.__penStartupLogs) ? window.__penStartupLogs : []
+  }, "*");
+  window.__penStartupLogs = null;
 })();
 `
 }
@@ -150,7 +161,27 @@ export function isPreviewReadyEvent(data: unknown): data is PreviewReadyEvent {
     isRecord(data) &&
     data.source === PREVIEW_SOURCE &&
     data.type === "ready" &&
-    typeof data.token === "string"
+    typeof data.token === "string" &&
+    Array.isArray(data.logs)
+  )
+}
+
+/**
+ * @param value - Item from a ready-event log buffer
+ * @returns Whether the item is a console log payload
+ */
+export function isPreviewReadyLog(
+  value: unknown
+): value is { level: ConsoleLevel; args: unknown[] } {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  const levels: readonly ConsoleLevel[] = ["log", "info", "warn", "error"]
+  return (
+    typeof value.level === "string" &&
+    levels.includes(value.level as ConsoleLevel) &&
+    Array.isArray(value.args)
   )
 }
 
