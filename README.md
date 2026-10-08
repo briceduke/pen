@@ -2,7 +2,7 @@
 
 In-browser HTML, CSS, and JavaScript playground — CodePen-style, no backend required.
 
-Stack: **Next.js App Router**, **TypeScript**, **Tailwind CSS**, **shadcn/ui** with the **Maia** preset, and **ax** project context.
+Stack: **Next.js App Router**, **TypeScript**, **Tailwind CSS**, and **shadcn/ui** with the **Maia** preset.
 
 ## Features
 
@@ -75,25 +75,6 @@ npx shadcn@latest init --template next --preset maia --base radix --no-monorepo 
 ```
 
 That produced `components.json` with `"style": "radix-maia"`, Maia’s Figtree + Geist Mono fonts, Hugeicons, and CSS variables in `app/globals.css`. UI pieces (Button, Tabs, Resizable, Switch, Select, etc.) were added with `npx shadcn@latest add`. Do not invent extra Maia tokens — use the generated semantic colors (`bg-background`, `text-muted-foreground`, …).
-
-## ax project context
-
-[ax](https://github.com/defai-digital/ax-cli) stores AI-oriented project context so coding agents know the stack without a long prompt.
-
-Checked in:
-
-- `AX.md` — primary context file (build commands, architecture, conventions)
-- `.ax/settings.json` — project-level ax settings
-
-Refresh after larger refactors:
-
-```bash
-# Interactive CLI
-npx @defai.digital/ax-grok
-# then: /init
-```
-
-`/init --depth=full` also writes `.ax/analysis.json`. No API keys are needed for this playground itself; ax is optional tooling around the repo.
 
 ## Security notes
 
