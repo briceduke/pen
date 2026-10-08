@@ -1,0 +1,15 @@
+core_hash: d963164accc2e6ad1d0bd25a6d6e8e81b4bf0a196239456d94064a87fddfbcc0
+ax_version: 0.7.0
+adapters:
+  .claude/settings.json: 8c559e7fafa3d83b9f9f80b74c6d2e131177db02823ca72e11429ea3747c2cdd
+  .claude/skills/log-friction/SKILL.md: e4cc5e4f5a54bfa7377fd2db2be96d62faef7ec4b489083ac0e1571d5801bbed
+  .claude/skills/record-decision/SKILL.md: 1662a3fecb30bb53a46e3345329addae38ad2e74948da19712a37e7e69d68d8c
+  .claude/skills/sync-harness/SKILL.md: 78c59b172d83397a0c86b15e1abde4daaf9ad132c607496a7896c9115088a772
+  .cursor/hooks.json: de91e4967f7ce780e71049064fe7ad810b2660ccac2a2a555614d434845136ae
+  .cursor/mcp.json: d8e397af03b5b032f21d0aa967086f0c78b33c87b76f2e9898ae0a144df7de02
+  .cursor/skills/log-friction/SKILL.md: e4cc5e4f5a54bfa7377fd2db2be96d62faef7ec4b489083ac0e1571d5801bbed
+  .cursor/skills/record-decision/SKILL.md: 1662a3fecb30bb53a46e3345329addae38ad2e74948da19712a37e7e69d68d8c
+  .cursor/skills/sync-harness/SKILL.md: 78c59b172d83397a0c86b15e1abde4daaf9ad132c607496a7896c9115088a772
+  .mcp.json: d8e397af03b5b032f21d0aa967086f0c78b33c87b76f2e9898ae0a144df7de02
+  AGENTS.md: 2441c872178088ccf508d6e20b5a7427efa61df27eac99e58880685d3ff93b52
+  CLAUDE.md: 2441c872178088ccf508d6e20b5a7427efa61df27eac99e58880685d3ff93b52
